@@ -12,7 +12,6 @@ from core import (
 
 
 if 'lang' not in st.session_state:
-
     st.session_state.lang = 'pt'
 
 with st.sidebar:
