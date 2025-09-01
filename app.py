@@ -12,17 +12,31 @@ from core import (
 
 
 if 'lang' not in st.session_state:
+
     st.session_state.lang = 'pt'
 
 with st.sidebar:
     selected_lang_name = st.selectbox(
         label="Idioma / Language",
-        options=['Português', 'English'],
+        options=[
+            '🇧🇷 Português',
+            '🇺🇸 English'
+        ],
         index=0 if st.session_state.lang == 'pt' else 1
     )
-    st.session_state.lang = 'pt' if selected_lang_name == 'Português' else 'en'
+    st.session_state.lang = 'pt' if selected_lang_name.startswith('🇧🇷') else 'en'
 
 T = translations[st.session_state.lang]
+st.markdown(
+    """
+    <style>
+        body, .main, .block-container {
+            background-color: #1a1a1a !important;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 st.set_page_config(layout="wide", page_title=T['page_title'])
 st.title(T['main_title'])
@@ -122,10 +136,18 @@ if st.session_state.running:
             st.session_state.target_phrase
         )
 
-        history_entry = T['history_entry'].format(
-            generation=st.session_state.generation,
-            candidate=st.session_state.best_candidate
-        )
+        highlighted_candidate = ""
+        for i, char in enumerate(st.session_state.best_candidate):
+            if char == st.session_state.target_phrase[i]:
+                highlighted_candidate += char
+            else:
+                highlighted_candidate += f'<span style="color: #dc3545;">{char}</span>'
+
+        history_entry = "<div style='background-color: #23272b; padding: 8px; border-radius: 4px;'>" + \
+            T['history_entry'].format(
+                generation=st.session_state.generation,
+                candidate=highlighted_candidate
+            ) + "</div>"
         st.session_state.history.append(history_entry)
         if len(st.session_state.history) > 15:
             st.session_state.history.pop(0)
@@ -172,18 +194,16 @@ if st.session_state.running:
                 styled_output += f'<span style="color: #dc3545;">{char}</span>'
 
         output_placeholder.markdown(
-            f"""<div style="font-family: 'Courier New', monospace; font-size:
-            24px; letter-spacing: 2px; border: 1px solid #444; padding: 15px;
-            border-radius: 5px; background-color: #1a1a1a;">
-            {styled_output}</div>""",
-            unsafe_allow_html=True
-        )
+        f"""<div style="font-family: 'Courier New', monospace; font-size: 24px; letter-spacing: 2px; border: 1px solid #444; padding: 15px; border-radius: 5px; background-color: #1a1a1a;">
+    {styled_output}</div>""",
+        unsafe_allow_html=True
+    )
 
         with history_placeholder.container():
             st.markdown("---")
             st.subheader(T['history_header'])
             for entry in reversed(st.session_state.history):
-                st.code(entry, language=None)
+                st.markdown(entry, unsafe_allow_html=True)
 
         time.sleep(0.01)
 
